@@ -74,16 +74,47 @@ app.get("/api/products/count", async (_req, res) => {
 
   res.status(200).send({ count: countData.data.productsCount.count });
 });
-const getCombinations = (arr) => {
+const getCombinations = (arr, budget) => {
   const result = [];
-  const f = (prefix, arr) => {
-    for (let i = 0; i < arr.length; i++) {
-      result.push([...prefix, arr[i]]);
-      f([...prefix, arr[i]], arr.slice(i + 1));
+
+  const findCombinations = (currentCombination, currentSum, startIndex) => {
+    if (currentSum <= budget) {
+      // Create a deep copy of currentCombination with quantities
+      const combinationWithQuantity = currentCombination.reduce((acc, item) => {
+        const existingItem = acc.find(i => i._doc.name === item.name);
+        if (existingItem) {
+          existingItem.quantity += 1;
+        } else {
+          acc.push({ ...item, quantity: 1 });
+        }
+        return acc;
+      }, []);
+      result.push({
+        combination: combinationWithQuantity.map(item => ({ ...item._doc, quantity: item.quantity })),
+        totalPrice: currentSum,
+        remaining: budget - currentSum,
+      });
     }
+
+    for (let i = startIndex; i < arr.length; i++) {
+      // If adding the next item exceeds the budget, skip it
+      if (currentSum + arr[i].price <= budget) {
+        // Recursive call with the new combination
+        findCombinations([...currentCombination, arr[i]], currentSum + arr[i].price, i);
+      }
+    }
+  };
+
+  arr.sort((a, b) => a.price - b.price); // Sort items by price
+  findCombinations([], 0, 0);
+
+  // Filter combinations to get the ones with the minimum remaining budget
+  if (result.length > 0) {
+    const minRemaining = Math.min(...result.map(r => r.remaining));
+    return result.filter(r => r.remaining === minRemaining);
   }
-  f([], arr);
-  return result;
+
+  return [];
 };
 
 app.post("/api/products/pair", async (_req, res) => {
@@ -107,30 +138,30 @@ let data = [];
     }
 
 
-    let combinations = []
+    let result = []
 
     if(keyboaradChecked && computerChecked) {
-      combinations = getCombinations(products);
+      data = getCombinations(products, budget);
     }
     else if(keyboaradChecked && !computerChecked) {
-       combinations = getCombinations(keyboards);
+      data = getCombinations(keyboards, budget);
 
     } else if(!keyboaradChecked && computerChecked) {
-      combinations = getCombinations(computers);
+      data = getCombinations(computers, budget);
     }
 
 
-    const validCombinations = combinations.filter(combination =>
-        combination.reduce((sum, item) => sum + item.price, 0) < budget
-    );
-
-    const validCombinationsWithTotalPrice = validCombinations.map(combination => ({
-      combination,
-      totalPrice: combination.reduce((sum, item) => sum + item.price, 0),
-      budget,
-        remaining: budget - combination.reduce((sum, item) => sum + item.price, 0)
-    }));
-    if(validCombinationsWithTotalPrice.length === 0) {
+    // const validCombinations = combinations.filter(combination =>
+    //     combination.reduce((sum, item) => sum + item.price, 0) < budget
+    // );
+    //
+    // const validCombinationsWithTotalPrice = validCombinations.map(combination => ({
+    //   combination,
+    //   totalPrice: combination.reduce((sum, item) => sum + item.price, 0),
+    //   budget,
+    //     remaining: budget - combination.reduce((sum, item) => sum + item.price, 0)
+    // }));
+    if(data.length === 0) {
       if(!keyboaradChecked && !computerChecked) {
         status = 500;
         error = "At least one product type should be selected";
@@ -138,10 +169,6 @@ let data = [];
         status = 500;
         error = "Products cannot be purchased within the given budget!";
       }
-    } else {
-      data = validCombinationsWithTotalPrice;
-
-
     }
   } catch (e) {
     console.log(`Failed to process products/create: ${e.message}`);

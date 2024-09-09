@@ -50,6 +50,9 @@ export default function HomePage() {
             const responseData = await response.json();
 
             if (response.ok) {
+
+
+
                 const pairCollection = responseData?.data?.map((item, index) => ({
                     index: index,
                     budget: item.budget,

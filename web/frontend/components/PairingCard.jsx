@@ -47,7 +47,7 @@ export function PairingCard( {pairData, pairCollection} ) {
                               <List.Item key={item.id}>
                                   <TextContainer>
                                       <Text>
-                                          {item.name} - {item.type} - {item.price}$
+                                          {item.quantity} x  {item.name} - {item.price}$
                                       </Text>
                                   </TextContainer>
                               </List.Item>
