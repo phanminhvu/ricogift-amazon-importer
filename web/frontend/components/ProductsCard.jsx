@@ -126,11 +126,14 @@ export function ProductsCard() {
               loading: isLoadingKeyboard,
             }}
         >
-          <List>
-            {keyboards?.data.map((keyboard) =>    <List.Item>{`${keyboard.name} - ${keyboard.price}$`}</List.Item>)}
+          <div style={{maxHeight: '300px', overflowY: 'scroll'}}>
+
+            <List>
+              {keyboards?.data.map((keyboard) => <List.Item>{`${keyboard.name} - ${keyboard.price}$`}</List.Item>)}
 
 
-          </List>
+            </List>
+          </div>
         </Card>
         <Card
             title="Computer"
@@ -141,10 +144,14 @@ export function ProductsCard() {
               loading: isLoadingComputer,
             }}
         >
+          <div style={{maxHeight: '300px', overflowY: 'scroll'}}>
 
-          {computers?.data.map((computer) =>    <List.Item>{`${computer.name} - ${computer.price}$`}</List.Item>)}
+            <List>
+              {computers?.data.map((computer) => <List.Item>{`${computer.name} - ${computer.price}$`}</List.Item>)}
+            </List>
+          </div>
         </Card>
       </div>
 
-  );
+);
 }
