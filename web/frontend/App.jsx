@@ -18,10 +18,12 @@ export default function App() {
       <BrowserRouter>
         <QueryProvider>
           <NavMenu>
-            <a href="/" rel="home" />
-            <a href="/pagename">{t("NavigationMenu.pageName")}</a>
+            <a href="/" rel="home"/>
+            <a href="/setting">Settings</a>
+            <a href="/plan">Plans</a>
+
           </NavMenu>
-          <Routes pages={pages} />
+          <Routes pages={pages}/>
         </QueryProvider>
       </BrowserRouter>
     </PolarisProvider>

@@ -4,6 +4,7 @@ import { readFileSync } from "fs";
 import express from "express";
 import serveStatic from "serve-static";
 import Product from "./models/product.model.js";
+import Shop from "./models/shop.model.js";
 
 import shopify from "./shopify.js";
 import productCreator from "./product-creator.js";
@@ -26,6 +27,32 @@ app.get(shopify.config.auth.path, shopify.auth.begin());
 app.get(
   shopify.config.auth.callbackPath,
   shopify.auth.callback(),
+    async (req, res, next) => {
+      const { shop, accessToken } = res.locals.shopify.session;
+
+      const find = await Shop.findOne({ shop });
+
+      if (find) {
+        await Shop.findOneAndUpdate({ shop: shop }, {
+          shop: shop,
+          token: accessToken,
+        })
+      } else {
+        await Shop.create({
+          shop: shop,
+          token: accessToken,
+        });
+        let client = new shopify.api.clients.Rest({
+          session: {
+            shop,
+            accessToken: accessToken
+          }
+        })
+
+      }
+
+      next();
+    },
   shopify.redirectToShopifyOrAppRoot()
 );
 app.post(
@@ -59,21 +86,6 @@ app.use("/api/*", shopify.validateAuthenticatedSession());
 
 app.use(express.json());
 
-app.get("/api/products/count", async (_req, res) => {
-  const client = new shopify.api.clients.Graphql({
-    session: res.locals.shopify.session,
-  });
-
-  const countData = await client.request(`
-    query shopifyProductCount {
-      productsCount {
-        count
-      }
-    }
-  `);
-
-  res.status(200).send({ count: countData.data.productsCount.count });
-});
 const getCombinations = (arr, budget) => {
   const result = [];
 
@@ -193,7 +205,6 @@ app.get("/api/products/keyboards", async (_req, res) => {
   const client = new shopify.api.clients.Graphql({
     session: res.locals.shopify.session,
   });
-
   const result = await Product.find({type: "keyboards"}).exec();
 
 
@@ -246,6 +257,7 @@ app.post("/api/products/computers", async (_req, res) => {
 app.post("/api/products", async (_req, res) => {
   let status = 200;
   let error = null;
+
 
   try {
     Product.create({

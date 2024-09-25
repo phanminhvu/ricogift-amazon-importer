@@ -7,13 +7,18 @@ import {
     Stack,
     Layout,
     Link,
-    Text,
+    Text, Frame, LegacyStack, Select, Icon,
 } from "@shopify/polaris";
 import {TitleBar, useAppBridge} from "@shopify/app-bridge-react";
 import {useTranslation, Trans} from "react-i18next";
 import {useCallback, useEffect, useState} from "react";
 import './index.css';
-
+import {
+    SettingsMinor,
+    PlanMinor,
+    ChatMajor,
+    QuestionMarkInverseMajor, SearchMinor,
+} from '@shopify/polaris-icons';
 import {trophyImage} from "../assets";
 
 import {ProductsCard} from "../components";
@@ -22,108 +27,70 @@ import {PairingCard} from "../components/PairingCard.jsx";
 export default function HomePage() {
     const shopify = useAppBridge();
     const {t} = useTranslation();
-    const [newsletter, setNewsletter] = useState(false);
-    const [isPairing, setIsPairing] = useState(false);
-    const [keyboaradChecked, setKeyboardChecked] = useState(false);
-
-    const [computerChecked, setComputerChecked] = useState(false);
-    const [budget, setBudget] = useState(0);
-    const [email, setEmail] = useState('');
-    const [pairCollection, setPairCollection] = useState([]);
-    const [pairData, setPairData] = useState([]);
-
-    const handleSubmit = useCallback(async () => {
-        setIsPairing(true);
-        try {
-            const response = await fetch("/api/products/pair", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    budget: budget,
-                    keyboaradChecked: keyboaradChecked,
-                    computerChecked: computerChecked,
-                }),
-            });
-
-            const responseData = await response.json();
-
-            if (response.ok) {
-
-
-
-                const pairCollection = responseData?.data?.map((item, index) => ({
-                    index: index,
-                    budget: item.budget,
-                    totalPrice: item.totalPrice,
-                    remaining: item.remaining,
-                }))
-                const pairData = responseData?.data?.map((item, index) => ({
-                    index: index,
-                    combination: item.combination,
-                }))
-
-                setPairCollection(pairCollection);
-                setPairData(pairData);
-
-                shopify.toast.show("Pairing successful!");
-            } else {
-                shopify.toast.show(responseData.error, {
-                    isError: true,
-                });
-            }
-        } catch (error) {
-            shopify.toast.show("An error occurred", {
-                isError: true,
-            });
-        }
-        setIsPairing(false);
-    }, [keyboaradChecked, computerChecked, budget, email]);
-
+    const [value, setValue] = useState('');
 
     return (
-        <Page narrowWidth>
-            <TitleBar title={t("HomePage.title")}/>
+        <Frame>
+            <Page
+
+                title="Products"
+         secondaryActions={[
+                {
+                    content: 'Settings',
+                    icon: SettingsMinor,
+                    onAction: () => console.log('Settings'),
+                },
+             {
+                    content: 'Plan',
+                    icon: PlanMinor,
+                    onAction: () => console.log('Plan'),
+             },
+             {
+                 content: 'Support',
+                    icon: ChatMajor,
+                 onAction: () => console.log('Support'),
+             },
+             {
+                 content: 'FAQ',
+                    icon: QuestionMarkInverseMajor,
+                 onAction: () => console.log('FAQ'),
+             }
+         ]}
+            >
             <Layout>
                 <Layout.Section>
-                    <Card sectioned>
-                            <Form onSubmit={handleSubmit}>
-                                <FormLayout>
-                                    <TextField
-                                        label="Budget"
-                                        type="number"
-                                        value={budget}
-                                        onChange={setBudget}
-                                        autoComplete="off"
-                                    />
+                    <Card sectioned title={'Import new product'}
+                    actions={[
+                        {content: 'Import by seller', onAction: () => console.log('Import')},
+                        {content: 'Bulk Import', onAction: () => console.log('Bulk Import')}
+                    ]}
+                    >
 
+                        <TextField
+                            label="Amazon product link"
+                            value={value}
+                            onChange={(newValue) => setValue(newValue)}
+                            autoComplete="off"
+                            connectedRight={<Button primary size={'slim'}>Import</Button>}
+                        />
 
-                                    <Checkbox
-                                        label="Keyboards"
-                                        checked={keyboaradChecked}
-                                        onChange={setKeyboardChecked}
+                    </Card>
+                    <Card sectioned title={'Products'}
+                    >
 
-                                    />
+                        <TextField
+                            label=""
+                            placeholder={'Search products by Title'}
+                            value={value}
+                            onChange={(newValue) => setValue(newValue)}
+                            prefix={<Icon source={SearchMinor} color="inkLighter" />}
+                        />
 
-                                    <Checkbox
-                                        label="Computers"
-                                        checked={computerChecked}
-                                        onChange={setComputerChecked}
-                                    />
-
-                                    <Button submit loading={isPairing}>Submit</Button>
-                                </FormLayout>
-                            </Form>
                     </Card>
                 </Layout.Section>
-                <Layout.Section>
-                    <PairingCard pairCollection={pairCollection} pairData={pairData}/>
-                </Layout.Section>
-                <Layout.Section>
-                    <ProductsCard/>
-                </Layout.Section>
+
             </Layout>
         </Page>
+            </Frame>
     );
 }
