@@ -27,32 +27,32 @@ app.get(shopify.config.auth.path, shopify.auth.begin());
 app.get(
   shopify.config.auth.callbackPath,
   shopify.auth.callback(),
-    async (req, res, next) => {
-      const { shop, accessToken } = res.locals.shopify.session;
+  async (req, res, next) => {
+    const { shop, accessToken } = res.locals.shopify.session;
 
-      const find = await Shop.findOne({ shop });
+    const find = await Shop.findOne({ shop });
 
-      if (find) {
-        await Shop.findOneAndUpdate({ shop: shop }, {
-          shop: shop,
-          token: accessToken,
-        })
-      } else {
-        await Shop.create({
-          shop: shop,
-          token: accessToken,
-        });
-        let client = new shopify.api.clients.Rest({
-          session: {
-            shop,
-            accessToken: accessToken
-          }
-        })
+    if (find) {
+      await Shop.findOneAndUpdate({ shop: shop }, {
+        shop: shop,
+        token: accessToken,
+      })
+    } else {
+      await Shop.create({
+        shop: shop,
+        token: accessToken,
+      });
+      let client = new shopify.api.clients.Rest({
+        session: {
+          shop,
+          accessToken: accessToken
+        }
+      })
 
-      }
+    }
 
-      next();
-    },
+    next();
+  },
   shopify.redirectToShopifyOrAppRoot()
 );
 app.post(
@@ -132,19 +132,19 @@ const getCombinations = (arr, budget) => {
 app.post("/api/products/pair", async (_req, res) => {
   let status = 200;
   let error = null;
-let data = [];
+  let data = [];
   try {
     const products = await Product.find().exec();
-    const keyboards = await Product.find({type: "keyboards"}).exec();
-    const computers = await Product.find({type: "computers"}).exec();
+    const keyboards = await Product.find({ type: "keyboards" }).exec();
+    const computers = await Product.find({ type: "computers" }).exec();
 
     const budget = _req.body.budget;
     const computerChecked = _req.body.computerChecked;
     const keyboaradChecked = _req.body.keyboaradChecked;
-    if(budget < 0) {
+    if (budget < 0) {
       status = 500;
       error = "Budget cannot be negative";
-    }else if(budget === 0) {
+    } else if (budget === 0) {
       status = 500;
       error = "Budget cannot be zero";
     }
@@ -152,13 +152,13 @@ let data = [];
 
     let result = []
 
-    if(keyboaradChecked && computerChecked) {
+    if (keyboaradChecked && computerChecked) {
       data = getCombinations(products, budget);
     }
-    else if(keyboaradChecked && !computerChecked) {
+    else if (keyboaradChecked && !computerChecked) {
       data = getCombinations(keyboards, budget);
 
-    } else if(!keyboaradChecked && computerChecked) {
+    } else if (!keyboaradChecked && computerChecked) {
       data = getCombinations(computers, budget);
     }
 
@@ -173,11 +173,11 @@ let data = [];
     //   budget,
     //     remaining: budget - combination.reduce((sum, item) => sum + item.price, 0)
     // }));
-    if(data.length === 0) {
-      if(!keyboaradChecked && !computerChecked) {
+    if (data.length === 0) {
+      if (!keyboaradChecked && !computerChecked) {
         status = 500;
         error = "At least one product type should be selected";
-      }else {
+      } else {
         status = 500;
         error = "Products cannot be purchased within the given budget!";
       }
@@ -195,9 +195,9 @@ app.get("/api/products/computers", async (_req, res) => {
     session: res.locals.shopify.session,
   });
 
-  const result = await Product.find({type: "computers"}).exec();
+  const result = await Product.find({ type: "computers" }).exec();
 
-  res.status(200).send({data: result});
+  res.status(200).send({ data: result });
 });
 
 
@@ -205,10 +205,10 @@ app.get("/api/products/keyboards", async (_req, res) => {
   const client = new shopify.api.clients.Graphql({
     session: res.locals.shopify.session,
   });
-  const result = await Product.find({type: "keyboards"}).exec();
+  const result = await Product.find({ type: "keyboards" }).exec();
 
 
-  res.status(200).send({data: result});
+  res.status(200).send({ data: result });
 
 });
 
@@ -258,14 +258,8 @@ app.post("/api/products", async (_req, res) => {
   let status = 200;
   let error = null;
 
-
   try {
-    Product.create({
-      name: "Test Product",
-      price: 10.0,
-      description: "This is a test product"
-    });
-    // await productCreator(res.locals.shopify.session);
+    console.log(_req.query, '_req');
   } catch (e) {
     console.log(`Failed to process products/create: ${e.message}`);
     status = 500;

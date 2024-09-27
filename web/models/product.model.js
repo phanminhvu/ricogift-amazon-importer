@@ -2,21 +2,22 @@ import mongoose from "mongoose";
 
 const productSchema = mongoose.Schema(
   {
-    name: {
+    amazonUrl: {
       type: "String",
       required: true,
-    },
-      type: {
-          type: "String",
-          required: true,
-      },
-    price: {
-      type: "Number",
-      required: true,
-    },
-      description: "String",
+    }
   },
-  { timestamps: true }
+  {
+    id: {
+      type: "String",
+    }
+  },
+  {
+    product: {
+      type: "String",
+      required: true
+    }
+  }
 );
 
 export default mongoose.model("product", productSchema);
