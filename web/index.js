@@ -259,13 +259,24 @@ app.post("/api/products", async (_req, res) => {
   let error = null;
 
   try {
-    console.log(_req.query, '_req');
+    // Session is built by the OAuth process
+
+    const product = new shopify.api.rest.Product({ session: res.locals.shopify.session });
+    product.title = "Burton Custom Freestyle 151";
+    product.body_html = "<strong>Good snowboard!</strong>";
+    product.vendor = "Burton";
+    product.product_type = "Snowboard";
+    product.status = "draft";
+    await product.save({
+      update: true,
+    });
+    res.status(status).send({ success: status, data: product });
   } catch (e) {
     console.log(`Failed to process products/create: ${e.message}`);
     status = 500;
     error = e.message;
+    res.status(status).send({ success: status, error });
   }
-  res.status(status).send({ success: status === 200, error });
 });
 
 app.use(shopify.cspHeaders());
