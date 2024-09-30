@@ -254,23 +254,169 @@ app.post("/api/products/computers", async (_req, res) => {
 });
 
 
-app.post("/api/products", async (_req, res) => {
+app.post("/api/products/import", async (_req, res) => {
   let status = 200;
   let error = null;
 
   try {
-    // Session is built by the OAuth process
+    // fake data
+    const body = {
+      "title": "Glorious Gaming - GMMK 3 HE Rapid Trigger Keyboard, Hall Effect, 8K Polling Rate, MX Mechanical & Magnetic Switches, Hotswappable 75% Keyboard, Modular Gasket System, Doubleshot PBT keycaps (Black)",
+      "variantsCount": 22,
+      "description": "",
+      "shortDescription": "Hall Effect Gaming Performance: React faster with Rapid Trigger, 8,000 Hz Polling, Customizable Actuation, 4:1 Dynamic Keystroke, and more. 8,000 Hz Polling Rate: Reports keyboard inputs up to 8X faster than other keyboards for peak responsiveness. 9 Points of Modularity: A highly modular design mak...",
+      "imageUrl": "https://m.media-amazon.com/images/I/61lP+eM4G5L._AC_SL1500_.jpg",
+      "options": {
+        "Size": ["TKL", "Full Size", "Compact", "TKL Wireless", "Compact Wireless"],
+        "Color": ["White", "Black"],
+        "Style": ["GMMK 3 Pro HE", "GMMK 3 HE", "GMMK 3", "GMMK 2", "GMMK 3 Pro"]
+      },
+      "status": "active",
+      "variants": [
+        {
+          "title": "Glorious Gaming - GMMK 3 HE Rapid Trigger Keyboard, Hall Effect, 8K Polling Rate, MX Mechanical & Magnetic Switches, Hotswappable 75% Keyboard, Modular Gasket System, Doubleshot PBT keycaps (Black)",
+          "shopifySku": "B0DCHFKHGB",
+          "price": 189.99,
+          "currency": "USD",
+          "position": 0,
+          "linkedProductUrl": "https://amazon.com/dp/B0DCHFKHGB?th=1&psc=1&"
+        }
+      ],
+      "lastUpdated": 1727593269.4070883,
+      "alreadyImported": false
+    }
 
+    // custom map
     const product = new shopify.api.rest.Product({ session: res.locals.shopify.session });
-    product.title = "Burton Custom Freestyle 151";
-    product.body_html = "<strong>Good snowboard!</strong>";
-    product.vendor = "Burton";
-    product.product_type = "Snowboard";
-    product.status = "draft";
+    product.title = body.title;
+    product.body_html = body.description;
+    product.images = [];
+    if (body.imageUrl) {
+      product.images.push({
+        position: 1,
+        src: body.imageUrl
+      });
+    }
+    // product.options = [];
+    // if (body.options) {
+    //   for (const item in body.options) {
+    //     product.options.push({
+    //       name: item,
+    //       values: body.options[item]
+    //     });
+    //   }
+    // }
+    // product.product_type = body.product_type;
+    // product.published_at = body.published_at;
+    // product.published_scope = body.published_scope;
+    product.status = body.status;
+    // product.tags = body.tags;
+    // product.template_suffix = body.template_suffix;
+    // product.updated_at = body.updated_at;
+    product.variants = [];
+    if (body.variants) {
+      for (const item of body.variants) {
+        product.variants.push({
+          title: item.title,
+          sku: item.shopifySku,
+          price: item.price,
+          position: item.position
+        })
+      }
+    }
+    // product.vendor = body.vendor;
+    console.log(product);
     await product.save({
       update: true,
     });
     res.status(status).send({ success: status, data: product });
+  } catch (e) {
+    console.log(`Failed to process products/create: ${e.message}`);
+    status = 500;
+    error = e.message;
+    res.status(status).send({ success: status, error });
+  }
+});
+
+app.post("/api/products/import-many", async (_req, res) => {
+  let status = 200;
+  let error = null;
+
+  try {
+    // fake data
+    const payload = [{
+      "title": "Glorious Gaming - GMMK 3 HE Rapid Trigger Keyboard, Hall Effect, 8K Polling Rate, MX Mechanical & Magnetic Switches, Hotswappable 75% Keyboard, Modular Gasket System, Doubleshot PBT keycaps (Black)",
+      "variantsCount": 22,
+      "description": "",
+      "shortDescription": "Hall Effect Gaming Performance: React faster with Rapid Trigger, 8,000 Hz Polling, Customizable Actuation, 4:1 Dynamic Keystroke, and more. 8,000 Hz Polling Rate: Reports keyboard inputs up to 8X faster than other keyboards for peak responsiveness. 9 Points of Modularity: A highly modular design mak...",
+      "imageUrl": "https://m.media-amazon.com/images/I/61lP+eM4G5L._AC_SL1500_.jpg",
+      "options": {
+        "Size": ["TKL", "Full Size", "Compact", "TKL Wireless", "Compact Wireless"],
+        "Color": ["White", "Black"],
+        "Style": ["GMMK 3 Pro HE", "GMMK 3 HE", "GMMK 3", "GMMK 2", "GMMK 3 Pro"]
+      },
+      "status": "active",
+      "variants": [
+        {
+          "title": "Glorious Gaming - GMMK 3 HE Rapid Trigger Keyboard, Hall Effect, 8K Polling Rate, MX Mechanical & Magnetic Switches, Hotswappable 75% Keyboard, Modular Gasket System, Doubleshot PBT keycaps (Black)",
+          "shopifySku": "B0DCHFKHGB",
+          "price": 189.99,
+          "currency": "USD",
+          "position": 0,
+          "linkedProductUrl": "https://amazon.com/dp/B0DCHFKHGB?th=1&psc=1&"
+        }
+      ],
+      "lastUpdated": 1727593269.4070883,
+      "alreadyImported": false
+    }]
+
+    // custom map
+    for (const body of payload) {
+      const product = new shopify.api.rest.Product({ session: res.locals.shopify.session });
+      product.title = body.title;
+      product.body_html = body.description;
+      product.images = [];
+      if (body.imageUrl) {
+        product.images.push({
+          position: 1,
+          src: body.imageUrl
+        });
+      }
+      // product.options = [];
+      // if (body.options) {
+      //   for (const item in body.options) {
+      //     product.options.push({
+      //       name: item,
+      //       values: body.options[item]
+      //     });
+      //   }
+      // }
+      // product.product_type = body.product_type;
+      // product.published_at = body.published_at;
+      // product.published_scope = body.published_scope;
+      product.status = body.status;
+      // product.tags = body.tags;
+      // product.template_suffix = body.template_suffix;
+      // product.updated_at = body.updated_at;
+      product.variants = [];
+      if (body.variants) {
+        for (const item of body.variants) {
+          product.variants.push({
+            title: item.title,
+            sku: item.shopifySku,
+            price: item.price,
+            position: item.position
+          })
+        }
+      }
+      // product.vendor = body.vendor;
+      console.log(product);
+      await product.save({
+        update: true,
+      });
+    }
+
+    res.status(status).send({ success: status });
   } catch (e) {
     console.log(`Failed to process products/create: ${e.message}`);
     status = 500;
